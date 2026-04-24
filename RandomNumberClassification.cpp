@@ -1,9 +1,9 @@
 #include "RandomNumberClassification.h"
 #include <sstream>
 struct NumberState {
-    bool is_first_digit_one = false;
-    bool is_containe_only_three_digit = false;
-    uint32_t multi_result = 1;
+    bool starts_with_one = false;
+    bool contains_three_digits = false;
+    uint32_t digits_multiplication = 1;
 };
 
 NumberState analyze_number(uint32_t number)
@@ -14,21 +14,20 @@ NumberState analyze_number(uint32_t number)
     while (number)
     {
         carry = number % 10;
-        res.multi_result = carry * res.multi_result;
+        res.digits_multiplication = carry * res.digits_multiplication;
         ++number_of_digit;
         number = number / 10;
     }
 
-    res.is_first_digit_one = carry == 1;
-    res.is_containe_only_three_digit = number_of_digit == 3;
+    res.starts_with_one = carry == 1;
+    res.contains_three_digits = number_of_digit == 3;
 
     return res;
 }
 
 std::vector<uint32_t> generate_random_numbers(uint32_t n_elements)
 {
-    std::random_device rd;  // a seed source for the random number engine
-    std::mt19937 gen(rd()); // mersenne_twister_engine seeded with rd()
+    static thread_local std::mt19937 gen(std::random_device{}());
     std::uniform_int_distribution<uint32_t> distrib(1, 999);
 
     std::vector<uint32_t> res;
@@ -41,38 +40,38 @@ std::vector<uint32_t> generate_random_numbers(uint32_t n_elements)
     return res;
 }
 
-std::string print_random_number_classificatrion(uint32_t number)
+std::string print_random_number_classification(uint32_t number)
 {
     std::ostringstream  res;
     if (number % 2)
     {
-        res << number << ":this is an odd number" << std::endl;
+        res << number << ": this is an odd number\n";
         return res.str();
     }
     
     NumberState number_state = analyze_number(number);
-    if (number_state.is_first_digit_one)
+    if (number_state.starts_with_one)
     {
         std::vector<uint32_t> new_rand_nums = generate_random_numbers(number);
-        res << number << ":start with 1 [original list:";
+        res << number << ": starts with 1 [origin list:";
         for (auto const& new_num : new_rand_nums)
             res << " " << new_num;
 
-        std::sort(new_rand_nums.begin(), new_rand_nums.end(), std::greater<uint32_t>());
+        std::sort(new_rand_nums.begin(), new_rand_nums.end());
         res << " Ordered list:";
         for (auto const& new_num : new_rand_nums)
             res << " " << new_num;
 
-        res << std::endl;
+        res << "]\n";
     }
-    else if (number_state.is_containe_only_three_digit)
+    else if (number_state.contains_three_digits)
     {
-        res << number << ":the digit's multiplcation are equal to "
-        << number_state.multi_result << std::endl;
+        res << number << ": the digit's multiplications are equal to "
+        << number_state.digits_multiplication << "\n";
     }
     else
     {
-        res << number << ":this is number belongs to te others" << std::endl;
+        res << number << ": this number belongs to the others\n";
     }
     
     return res.str();
